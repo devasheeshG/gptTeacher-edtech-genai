@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from utils.embed_pdf_into_vectordb import embed_pdf
+from utils.sementicSearch import ask_llm
 import os
 
 UPLOAD_FOLDER = "uploads"
@@ -21,7 +22,7 @@ def index():
     return "Welcome to GPT-Teacher API"
 
 
-@app.route("/upload", methods=["GET"])
+@app.route("/upload", methods=["GET", "POST"])
 def upload():
     """Uploads a file to the server"""
 
@@ -37,20 +38,40 @@ def upload():
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(filepath)
-        
+
         status = embed_pdf(filepath)
-        
+
         if status is not True:
             return jsonify({"error": "Something went wrong"}), 400
-        
+
         os.remove(filepath)
-        return jsonify({"message": "File uploaded and embeded into vector Database Successfully"}), 200
+        return (
+            jsonify(
+                {
+                    "message": "File uploaded and embeded into vector Database Successfully"
+                }
+            ),
+            200,
+        )
     else:
         return (
             jsonify({"error": "Invalid file format. Only PDF files are allowed."}),
             400,
         )
 
+
+@app.route("/search", methods=["GET"])
+def search():
+    """Searches the vector database for the given query"""
+    query = request.args.get("query")
+    # model = request.args.get("model")
+
+    if query is None:
+        return jsonify({"error": "No query provided"}), 400
+
+    results = ask_llm(query)
+
+    return jsonify({"results": results}), 200
 
 
 if __name__ == "__main__":

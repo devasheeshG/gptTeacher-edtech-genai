@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv("../.env")
 
 db = connections.connect(
-    user="root", password="jarvis@admin", host="192.168.1.98", port="19530"
+    user="root", password="jarvis@admin", host="192.168.0.254", port="19530"
 )
 
 embeddingd_api = os.getenv("OPENAI_EMBEDINGS_API_KEY")
